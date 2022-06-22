@@ -25,34 +25,70 @@ def readfile(xlist, ylist,zarray, MZvalues, filename, y_per_x):
     
     This function reads a file line by line until the modulation_time amount is met then begins sorting into defined xlist/ylist
     '''
-    counter = 0
-    xcounter = 0
-    tic_sum = 0
-    yholder = []
-    p = 0
-    for i in range(1, int(y_per_x)+2):
-        ylist.append(i)
+#  COMMENTED OUT REGION GIVES INVERTED FLIPPED CHROMATOGRAM   
+    #counter = 0
+    #xcounter = 0
+    #tic_sum = 0
+    #yholder = []
+    #p = 0
+    #for i in range(1, int(y_per_x)+2):
+        #ylist.append(i)
     
-    with open(filename, 'r') as read_obj:
+    #with open(filename, 'r') as read_obj:
         
-        csv_reader = reader(read_obj)  #  read line by line so only one line is in memory at a time
+        #csv_reader = reader(read_obj)  #  read line by line so only one line is in memory at a time
+        
+        
+        #for row in csv_reader:
+            #if counter > y_per_x:
+                #zarray.append(yholder)
+                #xcounter +=1
+                #xlist.append(xcounter)
+                #yholder = []
+                #counter = 0
+                #p += 1
+            #for i in MZvalues:
+                #if row[i] != '':
+                    #temp = int(row[i])
+                #tic_sum = tic_sum + temp
+            #yholder.append(tic_sum)
+            #tic_sum = 0
+            #counter += 1
+            
+    counter = 0
+    tic_sum = 0
+    xcounter = 1
+    for i in range(0, int(y_per_x)):
+        zarray.append([])
+    
+    for i in range(1, int(y_per_x)+1):
+        ylist.append(i)    
+            
+    with open(filename, 'r') as read_obj:
+                
+        csv_reader = reader(read_obj)  #  read line by line so only one line is in memory at a time    
         
         for row in csv_reader:
-            if counter > y_per_x:
-                zarray.append(yholder)
-                xcounter +=1
-                xlist.append(xcounter)
-                yholder = []
+            if counter == 229:
                 counter = 0
-                p += 1
+                xlist.append(xcounter)
+                xcounter += 1
+                
             for i in MZvalues:
                 if row[i] != '':
                     temp = int(row[i])
-                tic_sum = tic_sum + temp
-            yholder.append(tic_sum)
-            tic_sum = 0
-            counter += 1
+                tic_sum = tic_sum + temp  
         
+            zarray[counter].append(tic_sum)
+            counter += 1
+            
+            
+            tic_sum = 0
+        if len(zarray[0]) != len(xlist):
+            index = len(zarray[0])
+            for i in range(len(zarray)):
+                if len(zarray[i]) == index:
+                    zarray[i].pop()
     
 if __name__ == '__main__':
     
@@ -84,8 +120,8 @@ if __name__ == '__main__':
     total_time = end-start
     print(total_time)     
     
-    zarray.pop()
-    xlist.pop()
+    
+    
     print(len(zarray))
     print(len(zarray[0]))
     print('----')
@@ -93,7 +129,7 @@ if __name__ == '__main__':
     print(len(ylist))
     
     fig,ax=plt.subplots(1,1)
-    cp = ax.contourf(ylist, xlist, zarray, levels=[0,150,300,450,600,750,900,1050,1200,1350, 1500], colors=['#0b0bf6', '#8200dc', '#ae00c0', '#cb00a4', '#dd0088', '#e7006e', '#ec0056', '#eb0040', '#e7002c', '#e01217'], extend='both')
+    cp = ax.contourf(xlist, ylist, zarray, levels=[0,150,300,450,600,750,900,1050,1200,1350, 1500], colors=['#0b0bf6', '#8200dc', '#ae00c0', '#cb00a4', '#dd0088', '#e7006e', '#ec0056', '#eb0040', '#e7002c', '#e01217'], extend='both')
     fig.colorbar(cp) # Add a colorbar to a plot
     ax.set_title('Test Contour Plot')
     ax.set_xlabel('Testx')
