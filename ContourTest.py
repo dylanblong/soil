@@ -14,8 +14,6 @@ import csv
 import time
 
 
-     
-    
 def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x):
     '''
     xlist is container for the x dimension- How many columns?
@@ -79,6 +77,75 @@ def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x):
                 #  If the row has an additional item it removes it
                 if len(zarray[i]) == index:  
                     zarray[i].pop()
+    return largest
+
+def getTicks(retention_time, scale):
+    '''
+    Takes in the retention time and the scale of the desired axis and returns
+    a list with desired axis points
+    '''
+    ticks = [0] #  makes list
+    value = scale 
+    #  while the value is less then the retention time each axis increment is added
+    while value < retention_time:
+        ticks.append(value)
+        value += scale
+    ticks.append(retention_time) #  append the final value
+    return ticks  # Returns list of axis values
+
+def getTickPos(listt, ticks):
+    '''
+    listt is the respective x/ylist to know how many rows/columns there are in
+    the zarray
+    ticks is the determined ticks that will be labeled on the x/y axis
+    
+    The tick values are taken in and converted to values respective of the array
+    index scale so they can be properly labeled on the contour plot
+    '''
+    tickpos = [0] #  0 is position 0 
+    # makes a temp list that can be sliced front/back
+    temp = ticks
+    temp = temp[1:-1]
+    #  Index the temp list to allow for each value to be accounted for
+    for i in temp:
+        #  Finds the pos by taking the fractional position of each index then 
+        #  multiplying by the length of the list to get the exact position
+        #  for example (10/65) * 1403 = 261 so the position of the 10min 
+        #  marker will be at index 261 of the array when labeled
+        pos = (i/ticks[-1])*len(listt)
+        tickpos.append(pos)
+    #  Appends final value of list to the tick position
+    tickpos.append(len(listt)-1)
+    return tickpos
+              
+
+def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale):
+    '''
+    This makes the plot
+    '''
+    #  Makes contour plot by creating subplot, then contour plot with desired 
+    #  intensity levels and colour scheme (from hexvalues) then adds colourbar
+    fig,ax=plt.subplots(1,1,figsize=(8,8))
+    cp = plt.contourf(zarray, levels=[0,1000,2000,3000,4000,5000,6000,7000,8000,9000,10000], colors=['#0b0bf6', '#8200dc', '#ae00c0', '#cb00a4', '#dd0088', '#e7006e', '#ec0056', '#eb0040', '#e7002c', '#e01217'], extend='both')
+    fig.colorbar(cp) # Add a colorbar to a plot
+    
+    #  Set title, xaxis and yaxis labels
+    ax.set_title('Test Contour Plot')
+    ax.set_xlabel('1D (min)')
+    ax.set_ylabel('2D (sec)')
+   
+    #  Gets value of ticks based on desired scale
+    xticks = getTicks(retention_time_1d, x_scale)
+    yticks = getTicks(retention_time_2d, y_scale)
+    #  Sets ticks at desired postions
+    ax.set_xticks(getTickPos(xlist, xticks))
+    ax.set_yticks(getTickPos(ylist, yticks))
+    #  Sets tick labels at previously set positions
+    ax.set_xticklabels(xticks, fontdict=None, minor=False)
+    ax.set_yticklabels(yticks, fontdict=None, minor=False)
+    
+   
+    plt.show()    #  shows the plot visually, temporary while testing
     
 if __name__ == '__main__':
     
@@ -89,8 +156,10 @@ if __name__ == '__main__':
     #  Set items here specific to GC run
     modulation_time = 2.3  #  in seconds
     acquisitions_persec = 100  # MassSpec sampling rate per second
-    retention_time_1d = ''  # retention time of 1D
-    retention_time_2d = ''  # retention time of 2D
+    retention_time_1d = 65  # retention time of 1D
+    x_scale = 10  # value you want x axis to scale by (in minutes)
+    retention_time_2d = 2.3  # retention time of 2D
+    y_scale = 0.5  # value you want the y axis to scale by (in seconds)
     MZvalues = [43, 57, 71, 85, 99]  #  What m/z values you want
     filename = '202200506_DL_1_TertButylOHAc5050_BL_70eVoutput.csv'
     
@@ -109,14 +178,8 @@ if __name__ == '__main__':
     #  Call readfile to load the file
     readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x)
     
-    
-    fig,ax=plt.subplots(1,1)
-    cp = ax.contourf(xlist, ylist, zarray, levels=[0,150,300,450,600,750,900,1050,1200,1350, 1500], colors=['#0b0bf6', '#8200dc', '#ae00c0', '#cb00a4', '#dd0088', '#e7006e', '#ec0056', '#eb0040', '#e7002c', '#e01217'], extend='both')
-    fig.colorbar(cp) # Add a colorbar to a plot
-    ax.set_title('Test Contour Plot')
-    ax.set_xlabel('Testx')
-    ax.set_ylabel('Testy')
-    plt.show()
+    #  Call makeplot to make the contour plot
+    makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale)
     
     #  guage time it takes to make contour plot
     end = time.time()
