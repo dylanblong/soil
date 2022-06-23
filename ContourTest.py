@@ -16,117 +16,99 @@ import time
 
      
     
-def readfile(xlist, ylist,zarray, MZvalues, filename, y_per_x):
+def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x):
     '''
-    Takes in the xlist/ylist for testing purposes
+    xlist is container for the x dimension- How many columns?
+    ylist is container for the y dimension- How many rows?
+    zarray is container that contains intensities at certain x/y coordinate
     MZvalues represent the m/z values that we want to look for
     filename is the name of the file
-    modulation_time represents the 'number of Y values per X value'
+    y_per_x represents the number of acquisions per modulation
     
-    This function reads a file line by line until the modulation_time amount is met then begins sorting into defined xlist/ylist
+    This function reads a file line by line and appends to zarray everytime the
+    y_per_x acqusion count is met, representing a new column in the data
     '''
-#  COMMENTED OUT REGION GIVES INVERTED FLIPPED CHROMATOGRAM   
-    #counter = 0
-    #xcounter = 0
-    #tic_sum = 0
-    #yholder = []
-    #p = 0
-    #for i in range(1, int(y_per_x)+2):
-        #ylist.append(i)
-    
-    #with open(filename, 'r') as read_obj:
-        
-        #csv_reader = reader(read_obj)  #  read line by line so only one line is in memory at a time
-        
-        
-        #for row in csv_reader:
-            #if counter > y_per_x:
-                #zarray.append(yholder)
-                #xcounter +=1
-                #xlist.append(xcounter)
-                #yholder = []
-                #counter = 0
-                #p += 1
-            #for i in MZvalues:
-                #if row[i] != '':
-                    #temp = int(row[i])
-                #tic_sum = tic_sum + temp
-            #yholder.append(tic_sum)
-            #tic_sum = 0
-            #counter += 1
-            
     counter = 0
     tic_sum = 0
     xcounter = 1
+    
+    #  Primes zarray by creating empty containers for every row
     for i in range(0, int(y_per_x)):
         zarray.append([])
-    
+        
+    #  Makes ylist with amount of items relevant to number of rows
     for i in range(1, int(y_per_x)+1):
         ylist.append(i)    
             
-    with open(filename, 'r') as read_obj:
-                
-        csv_reader = reader(read_obj)  #  read line by line so only one line is in memory at a time    
+    #  Opens file in readmode       
+    with open(filename, 'r') as read_obj:       
+        #  read line by line so only one line is in memory at a time    
+        csv_reader = reader(read_obj)  
         
+        #  Loads a row from csv_reader one at a time
         for row in csv_reader:
-            if counter == 229:
-                counter = 0
-                xlist.append(xcounter)
+            #  If the counter == y_per_x we know that one modulation of the 2D has occured
+            if counter == y_per_x:
+                #  setting the counter to 0 allows us to append to the first item
+                #  in zarray again allowing us to index zarray as we load rows until
+                #  we reach y_per_x again
+                counter = 0  
+                xlist.append(xcounter)  # Appends value to xlist to represent a new column
                 xcounter += 1
                 
+            #  Checks intensity of each m/z value and adds together
             for i in MZvalues:
                 if row[i] != '':
                     temp = int(row[i])
                 tic_sum = tic_sum + temp  
-        
+            
+            #  Appends tic_sum to specific container in zarray that represents the
+            #  desired x/y coordinates
             zarray[counter].append(tic_sum)
-            counter += 1
+            counter += 1 #  Moves to the next container
+            tic_sum = 0 #  Resets the tic_sum for the next row
             
-            
-            tic_sum = 0
-        if len(zarray[0]) != len(xlist):
+        #  If we have an incomplete final column, this will remove the last
+        #  amount of data at the end of the run as a complete zarray is needed 
+        #  for matplotlib contour plots to be formed
+        if len(zarray[0]) != len(xlist): 
+            #  If the first row of zarray has an additional item it sets this 
+            #  amount as the 'max amount' of items allowed in a row
             index = len(zarray[0])
-            for i in range(len(zarray)):
-                if len(zarray[i]) == index:
+            for i in range(len(zarray)):  #  Indexes each row
+                #  If the row has an additional item it removes it
+                if len(zarray[i]) == index:  
                     zarray[i].pop()
     
 if __name__ == '__main__':
     
+    #  guage time it takes to make contour plot
     total_time = 0.0
     start = time.time()    
     
-    modulation_time = (2.3)
-    acquisitions_persec = 100  # MassSpec sampling rate
-    retention_time_1d = ''
-    retention_time_2d = ''
+    #  Set items here specific to GC run
+    modulation_time = 2.3  #  in seconds
+    acquisitions_persec = 100  # MassSpec sampling rate per second
+    retention_time_1d = ''  # retention time of 1D
+    retention_time_2d = ''  # retention time of 2D
     MZvalues = [43, 57, 71, 85, 99]  #  What m/z values you want
-    xlist = []
-    ylist = []
-    zarray = []
     filename = '202200506_DL_1_TertButylOHAc5050_BL_70eVoutput.csv'
     
-    #  Can play with these values to determine the right values for out GC run
-    #  May need to add the 2.53s to GC runtime
-    acquisitions = 389990
-    GC_runtimeseconds = 3300
+    #  Container creation and pre-calculations
+    y_per_x = round(modulation_time*acquisitions_persec) #  How many y values per x
+    xlist = []
+    ylist = []
+    zarray = []    
+    #  Shifts MZvalues down 30 to correspond to index they exist in imported csv
     for i in range(0,len(MZvalues)):
         MZvalues[i] = MZvalues[i] - 30
-    y_per_x = modulation_time*acquisitions_persec #  How many y values per x
+        
     
     
+    
+    #  Call readfile to load the file
     readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x)
     
-    end = time.time()
-    total_time = end-start
-    print(total_time)     
-    
-    
-    
-    print(len(zarray))
-    print(len(zarray[0]))
-    print('----')
-    print(len(xlist))
-    print(len(ylist))
     
     fig,ax=plt.subplots(1,1)
     cp = ax.contourf(xlist, ylist, zarray, levels=[0,150,300,450,600,750,900,1050,1200,1350, 1500], colors=['#0b0bf6', '#8200dc', '#ae00c0', '#cb00a4', '#dd0088', '#e7006e', '#ec0056', '#eb0040', '#e7002c', '#e01217'], extend='both')
@@ -136,3 +118,7 @@ if __name__ == '__main__':
     ax.set_ylabel('Testy')
     plt.show()
     
+    #  guage time it takes to make contour plot
+    end = time.time()
+    total_time = end-start
+    print(total_time)       
