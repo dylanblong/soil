@@ -14,6 +14,7 @@ import csv
 import time
 
 
+
 def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x):
     '''
     xlist is container for the x dimension- How many columns?
@@ -29,6 +30,7 @@ def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x):
     counter = 0
     tic_sum = 0
     xcounter = 1
+    largest = 0
 
     #  Primes zarray by creating empty containers for every row
     for i in range(0, int(y_per_x)):
@@ -59,6 +61,8 @@ def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x):
                 if row[i] != '':
                     temp = int(row[i])
                 tic_sum = tic_sum + temp
+            if tic_sum > largest:
+                largest = tic_sum
 
                 #  Appends tic_sum to specific container in zarray that represents the
             #  desired x/y coordinates
@@ -77,7 +81,7 @@ def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x):
                 #  If the row has an additional item it removes it
                 if len(zarray[i]) == index:
                     zarray[i].pop()
-    # return largest
+    return largest
 
 
 def getTicks(retention_time, scale):
@@ -120,18 +124,31 @@ def getTickPos(listt, ticks):
     tickpos.append(len(listt) - 1)
     return tickpos
 
+def getscale(largest):
+    '''
+    largest is the value of highest intensity of the respective 2D chromatogram(s)
 
-def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale):
+    returns scale of length 8 which pseudo log scales based on the largest value
+    '''
+    scale = [0]
+    for i in range(1,1000):
+        p = i*i
+        item = (p/(1000*1000)*(largest/5))
+        scale.append(item)
+    print(scale)
+    return scale
+
+def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest):
     '''
     This makes the plot
     '''
+    #  Gets the z-axis scale
+    scale = getscale(largest)
     #  Makes contour plot by creating subplot, then contour plot with desired 
     #  intensity levels and colour scheme (from hexvalues) then adds colourbar
     fig, ax = plt.subplots(1, 1, figsize=(12, 8))
-    cp = plt.contourf(zarray, levels=[0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000],
-                      colors=['#0b0bf6', '#8200dc', '#ae00c0', '#cb00a4', '#dd0088', '#e7006e', '#ec0056', '#eb0040',
-                              '#e7002c', '#e01217'], extend='both')
-    fig.colorbar(cp)  # Add a colorbar to a plot
+    cp = plt.contourf(zarray, levels=scale, extend='both', cmap='jet')
+    fig.colorbar(cp,label='Intensity')  # Add a colorbar to a plot
 
     #  Set title, xaxis and yaxis labels
     ax.set_title('Test Contour Plot')
@@ -177,10 +194,10 @@ if __name__ == '__main__':
         MZvalues[i] = MZvalues[i] - 30
 
     #  Call readfile to load the file
-    readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x)
+    largest = readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x)
 
     #  Call makeplot to make the contour plot
-    makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale)
+    makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest)
 
     #  gauge time it takes to make contour plot
     end = time.time()
