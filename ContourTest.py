@@ -132,9 +132,11 @@ def getscale(largest):
     '''
     scale = [0]
     for i in range(1,1000):
-        p = i*i
-        item = (p/(1000*1000)*(largest/5))
+        p = 10**(np.log10(i*i*i))
+        item = (p/(10**9))*(largest/4)
+
         scale.append(item)
+    print(largest)
     print(scale)
     return scale
 
@@ -146,7 +148,7 @@ def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest):
     scale = getscale(largest)
     #  Makes contour plot by creating subplot, then contour plot with desired 
     #  intensity levels and colour scheme (from hexvalues) then adds colourbar
-    fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+    fig, ax = plt.subplots()
     cp = plt.contourf(zarray, levels=scale, extend='both', cmap='jet')
     fig.colorbar(cp,label='Intensity')  # Add a colorbar to a plot
 
