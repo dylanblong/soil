@@ -27,6 +27,10 @@ def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x):
     This function reads a file line by line and appends to zarray everytime the
     y_per_x acqusion count is met, representing a new column in the data
     '''
+
+
+
+
     counter = 0
     tic_sum = 0
     xcounter = 1
@@ -140,7 +144,7 @@ def getscale(largest):
     print(scale)
     return scale
 
-def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest):
+def makeplot(ax, retention_time_1d, retention_time_2d, x_scale, y_scale, largest):
     '''
     This makes the plot
     '''
@@ -148,7 +152,7 @@ def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest):
     scale = getscale(largest)
     #  Makes contour plot by creating subplot, then contour plot with desired 
     #  intensity levels and colour scheme (from hexvalues) then adds colourbar
-    fig, ax = plt.subplots()
+
     cp = plt.contourf(zarray, levels=scale, extend='both', cmap='jet')
     fig.colorbar(cp,label='Intensity')  # Add a colorbar to a plot
 
@@ -167,7 +171,7 @@ def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest):
     ax.set_xticklabels(xticks, fontdict=None, minor=False)
     ax.set_yticklabels(yticks, fontdict=None, minor=False)
 
-    plt.show()  # shows the plot visually, temporary while testing
+    return cp
 
 
 if __name__ == '__main__':
@@ -183,25 +187,42 @@ if __name__ == '__main__':
     x_scale = 10  # value you want x axis to scale by (in minutes)
     retention_time_2d = 2.3  # retention time of 2D
     y_scale = 0.5  # value you want the y axis to scale by (in seconds)
-    MZvalues = [43, 57, 71, 85, 99]  # What m/z values you want
+    MZvalues = [[43, 57, 71, 85, 99], [41, 55, 69, 83, 97]]  # What m/z values you want
+    # Alkanes, cycloalkanes
     filename = '202200506_DL_1_TertButylOHAc5050_BL_70eVoutput.csv'
-
-    #  Container creation and pre-calculations
     y_per_x = round(modulation_time * acquisitions_persec)  # How many y values per x
-    xlist = []
-    ylist = []
-    zarray = []
+    testnumber = 0  # Value the scale is based off of
+
     #  Shifts MZvalues down 30 to correspond to index they exist in imported csv
-    for i in range(0, len(MZvalues)):
-        MZvalues[i] = MZvalues[i] - 30
+    for row in range(0, len(MZvalues)):
+        for i in range(0, len(MZvalues[row])):
+            MZvalues[row][i] = MZvalues[row][i] - 30
 
-    #  Call readfile to load the file
-    largest = readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x)
+    fig, (ax1, ax2) = plt.subplots(1, 2)
 
-    #  Call makeplot to make the contour plot
-    makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest)
+    for values in MZvalues:
+        #  Container creation and pre-calculations
+        xlist = []
+        ylist = []
+        zarray = []
+        #  Call readfile to load the file
+        if testnumber == 0:
+            ax = ax1
+            testnumber += 1
+        else:
+            ax = ax2
+        largest = readfile(xlist, ylist, zarray, values, filename, y_per_x)
+
+
+        #  Call makeplot to make the contour plot
+        makeplot(ax, retention_time_1d, retention_time_2d, x_scale, y_scale, largest)
+
+    # Gets
+    #fig.colorbar(ax, label='Intensity')  # Add a colorbar to a plot
 
     #  gauge time it takes to make contour plot
     end = time.time()
     total_time = end - start
     print(total_time)
+
+    plt.show()
