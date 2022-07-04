@@ -14,7 +14,7 @@ import csv
 import time
 
 
-def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x):
+def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x, solvent_delay, retention1D):
     '''
     xlist is container for the x dimension- How many columns?
     ylist is container for the y dimension- How many rows?
@@ -66,7 +66,12 @@ def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x):
 
                 #  Appends tic_sum to specific container in zarray that represents the
             #  desired x/y coordinates
-            zarray[counter].append(np.log10(tic_sum))
+
+            if tic_sum < 100:
+                zarray[counter].append(0)
+
+            else:
+                zarray[counter].append(np.log10(tic_sum))
             counter += 1  # Moves to the next container
             tic_sum = 0  # Resets the tic_sum for the next row
 
@@ -81,15 +86,23 @@ def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x):
                 #  If the row has an additional item it removes it
                 if len(zarray[i]) == index:
                     zarray[i].pop()
+
+        #  Solvent delay work
+        xlength = len(xlist)
+        slvdelay_slice = int((solvent_delay/retention1D)*xlength)
+
+        del xlist[:slvdelay_slice]
+        for i in range(0, y_per_x):
+            del zarray[i][:slvdelay_slice]
     return largest
 
 
-def getTicks(retention_time, scale):
+def getTicks(retention_time, scale, solvent_delay):
     '''
     Takes in the retention time and the scale of the desired axis and returns
     a list with desired axis points
     '''
-    ticks = [0]  # makes list
+    ticks = [solvent_delay]  # makes list
     value = scale
     #  while the value is less then the retention time each axis increment is added
     while value < retention_time:
@@ -99,7 +112,7 @@ def getTicks(retention_time, scale):
     return ticks  # Returns list of axis values
 
 
-def getTickPos(listt, ticks):
+def getTickPos(listt, ticks, solvent_delay):
     '''
     listt is the respective x/ylist to know how many rows/columns there are in
     the zarray
@@ -108,7 +121,7 @@ def getTickPos(listt, ticks):
     The tick values are taken in and converted to values respective of the array
     index scale so they can be properly labeled on the contour plot
     '''
-    tickpos = [0]  # 0 is position 0
+    tickpos = [solvent_delay]  # 0 is position 0
     # makes a temp list that can be sliced front/back
     temp = ticks
     temp = temp[1:-1]
@@ -131,12 +144,11 @@ def getscale(largest):
 
     returns scale of length 8 which pseudo log scales based on the largest value
     '''
-    scale = [0]
+    scale = [1.5]
     count = 0
-    item = 0
-    log = np.log10(largest)
-    increment = log/1000
-    while count < 999:
+    item = 1.5
+    increment = np.log10(largest)/1200
+    while count < 900:
         item = item + increment
         count += 1
         scale.append(item)
@@ -168,7 +180,7 @@ def getCBticks():
 
 
 
-def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest):
+def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest, solvent_delay):
     '''
     This makes the plot
     '''
@@ -178,20 +190,20 @@ def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest):
     #  intensity levels and colour scheme (from hexvalues) then adds colourbar
     fig, ax = plt.subplots()
     #cp = plt.contourf(zarray_list[0], levels=scale, locator=[100,1000,10000,100000,1000000], extend='both', cmap='jet')
-    cp = plt.contourf(zarray_list[0], levels=scale, cmap='jet')
-    fig.colorbar(cp, label='Intensity'), scale  # Add a colorbar to a plot
+    cp = plt.contourf(zarray_list[1], levels=scale, locator=[2,3,4,5,6], cmap='jet', extend='both')
+    fig.colorbar(cp, label='Intensity') # Add a colorbar to a plot
 
     #  Set title, xaxis and yaxis labels
     ax.set_title('Test Contour Plot')
     ax.set_xlabel('1D (min)')
     ax.set_ylabel('2D (sec)')
 
-    #  Gets value of ticks based on desired scale
-    xticks = getTicks(retention_time_1d, x_scale)
-    yticks = getTicks(retention_time_2d, y_scale)
-    #  Sets ticks at desired postions
-    ax.set_xticks(getTickPos(xlist, xticks))
-    ax.set_yticks(getTickPos(ylist, yticks))
+    #  Gets value of ticks based on desired x/y scale
+    xticks = getTicks(retention_time_1d, x_scale, solvent_delay)
+    yticks = getTicks(retention_time_2d, y_scale, solvent_delay)
+    #  Sets ticks at desired x/y positions
+    ax.set_xticks(getTickPos(xlist, xticks, solvent_delay))
+    ax.set_yticks(getTickPos(ylist, yticks, solvent_delay))
     #  Sets tick labels at previously set positions
     ax.set_xticklabels(xticks, fontdict=None, minor=False)
     ax.set_yticklabels(yticks, fontdict=None, minor=False)
@@ -208,13 +220,14 @@ if __name__ == '__main__':
     #  Set items here specific to GC run
     modulation_time = 2.3  # in seconds
     acquisitions_persec = 100  # MassSpec sampling rate per second
-    retention_time_1d = 65  # retention time of 1D
+    retention_time_1d = 65  # retention time of 1D (in minutes)
     x_scale = 10  # value you want x axis to scale by (in minutes)
     retention_time_2d = 2.3  # retention time of 2D
     y_scale = 0.5  # value you want the y axis to scale by (in seconds)
+    solvent_delay = 11.1  # solvent delay in minutes (change for solvent type)
     MZvalues = [[43, 57, 71, 85, 99], [41, 55, 69, 83, 97]]  # What m/z values you want
     # Alkanes, cycloalkanes
-    filename = '202200506_DL_1_TertButylOHAc5050_BL_70eVoutput.csv'
+    filename = '202200505_DL_4_EthylAcetate_BL_70eVoutput.csv'
     y_per_x = round(modulation_time * acquisitions_persec)  # How many y values per x
     scaled = 0  # Value the scale is based off of
     zarray_list = []
@@ -231,8 +244,10 @@ if __name__ == '__main__':
         xlist = []
         ylist = []
         zarray = []
+        print('reset')
+        print(zarray)
         #  Call readfile to load the file
-        largest = readfile(xlist, ylist, zarray, values, filename, y_per_x)
+        largest = readfile(xlist, ylist, zarray, values, filename, y_per_x, solvent_delay, retention_time_1d)
         #  Appends zarray of respective MZvalue to list
         zarray_list.append(zarray)
         #  If the largest intensity of the MZvalue is larger than the current, it is replaced
@@ -242,7 +257,7 @@ if __name__ == '__main__':
 
     # Gets
     # fig.colorbar(ax, label='Intensity')  # Add a colorbar to a plot
-    makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, scaled)
+    makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, scaled, solvent_delay)
     #  gauge time it takes to make contour plot
     end = time.time()
     total_time = end - start
