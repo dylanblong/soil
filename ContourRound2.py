@@ -90,8 +90,10 @@ def readfile(xlist, ylist, zarray, MZvalues, filename, y_per_x, solvent_delay, r
         #  Solvent delay work
         xlength = len(xlist)
         slvdelay_slice = int((solvent_delay/retention1D)*xlength)
-
+        print(len(xlist))
         del xlist[:slvdelay_slice]
+        print(len(xlist))
+        print(slvdelay_slice)
         for i in range(0, y_per_x):
             del zarray[i][:slvdelay_slice]
     return largest
@@ -102,8 +104,15 @@ def getTicks(retention_time, scale, solvent_delay):
     Takes in the retention time and the scale of the desired axis and returns
     a list with desired axis points
     '''
-    ticks = [solvent_delay]  # makes list
+
+    if retention_time == 2.3:
+        ticks = [0]  # 0 is position 0
+    else:
+        ticks = [solvent_delay]
+
     value = scale
+    while value < ticks[0]:
+        value += scale
     #  while the value is less then the retention time each axis increment is added
     while value < retention_time:
         ticks.append(value)
@@ -121,7 +130,10 @@ def getTickPos(listt, ticks, solvent_delay):
     The tick values are taken in and converted to values respective of the array
     index scale so they can be properly labeled on the contour plot
     '''
-    tickpos = [solvent_delay]  # 0 is position 0
+    if listt == ylist:
+        tickpos = [0]  # 0 is position 0
+    if listt == xlist:
+        tickpos = [solvent_delay]
     # makes a temp list that can be sliced front/back
     temp = ticks
     temp = temp[1:-1]
@@ -131,8 +143,12 @@ def getTickPos(listt, ticks, solvent_delay):
         #  multiplying by the length of the list to get the exact position
         #  for example (10/65) * 1403 = 261 so the position of the 10min
         #  marker will be at index 261 of the array when labeled
+        #if listt == ylist:
         pos = (i / ticks[-1]) * len(listt)
         tickpos.append(pos)
+        #else:
+         #   pos = (i / (ticks[-1]-solvent_delay)) * len(listt)
+           # tickpos.append(pos)
     #  Appends final value of list to the tick position
     tickpos.append(len(listt) - 1)
     return tickpos
@@ -172,12 +188,20 @@ def fill(min, max):
             count += 4
     return scale_list
 
-def getCBticks():
+def getCBticks(scale):
     '''
     :return:
     '''
-
-
+    max = scale[-1]
+    min = scale[0]
+    print(min)
+    print(max)
+    CBticks = []
+    for i in range(int(min)+1, int(max)+1):
+        item = i
+        CBticks.append(item)
+    print(CBticks)
+    return CBticks
 
 
 def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest, solvent_delay):
@@ -190,7 +214,7 @@ def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest, so
     #  intensity levels and colour scheme (from hexvalues) then adds colourbar
     fig, ax = plt.subplots()
     #cp = plt.contourf(zarray_list[0], levels=scale, locator=[100,1000,10000,100000,1000000], extend='both', cmap='jet')
-    cp = plt.contourf(zarray_list[1], levels=scale, locator=[2,3,4,5,6], cmap='jet', extend='both')
+    cp = plt.contourf(zarray_list[1], levels=scale, locator=([2,3,4]), cmap='jet', extend='both')
     fig.colorbar(cp, label='Intensity') # Add a colorbar to a plot
 
     #  Set title, xaxis and yaxis labels
@@ -222,7 +246,7 @@ if __name__ == '__main__':
     acquisitions_persec = 100  # MassSpec sampling rate per second
     retention_time_1d = 65  # retention time of 1D (in minutes)
     x_scale = 10  # value you want x axis to scale by (in minutes)
-    retention_time_2d = 2.3  # retention time of 2D
+    retention_time_2d = 2.3  # retention time of 2D  note- value is hard coded in getTicks() and will need to be changed too
     y_scale = 0.5  # value you want the y axis to scale by (in seconds)
     solvent_delay = 11.1  # solvent delay in minutes (change for solvent type)
     MZvalues = [[43, 57, 71, 85, 99], [41, 55, 69, 83, 97]]  # What m/z values you want
