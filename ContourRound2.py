@@ -113,11 +113,13 @@ def getTicks(retention_time, scale, solvent_delay):
     value = scale
     while value < ticks[0]:
         value += scale
+        print(value)
     #  while the value is less then the retention time each axis increment is added
     while value < retention_time:
         ticks.append(value)
         value += scale
     ticks.append(retention_time)  # append the final value
+    print(ticks)
     return ticks  # Returns list of axis values
 
 
@@ -130,10 +132,9 @@ def getTickPos(listt, ticks, solvent_delay):
     The tick values are taken in and converted to values respective of the array
     index scale so they can be properly labeled on the contour plot
     '''
-    if listt == ylist:
-        tickpos = [0]  # 0 is position 0
-    if listt == xlist:
-        tickpos = [solvent_delay]
+
+    tickpos = [0]  # 0 is position 0
+
     # makes a temp list that can be sliced front/back
     temp = ticks
     temp = temp[1:-1]
@@ -143,12 +144,12 @@ def getTickPos(listt, ticks, solvent_delay):
         #  multiplying by the length of the list to get the exact position
         #  for example (10/65) * 1403 = 261 so the position of the 10min
         #  marker will be at index 261 of the array when labeled
-        #if listt == ylist:
-        pos = (i / ticks[-1]) * len(listt)
+        if listt == ylist:
+            pos = (i / ticks[-1]) * len(listt)
+        else:
+            pos = (i-solvent_delay / (ticks[-1])) * len(listt)
+            #print('L')
         tickpos.append(pos)
-        #else:
-         #   pos = (i / (ticks[-1]-solvent_delay)) * len(listt)
-           # tickpos.append(pos)
     #  Appends final value of list to the tick position
     tickpos.append(len(listt) - 1)
     return tickpos
