@@ -198,7 +198,7 @@ def getCBticks(scale):
     print(item)
     print(max)
     CBticks = []
-    while item < max:
+    while item < (max-0.49):
         item += 0.5
         CBticks.append(item)
     print(CBticks)
@@ -217,21 +217,21 @@ def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest, so
     yticks = getTicks(retention_time_2d, y_scale, solvent_delay)
     #  Makes contour plot by creating subplot, then contour plot with desired
     #  intensity levels and colour scheme (from hexvalues) then adds colourbar
-    fig, ax = plt.subplots(2, 2)
+    fig, ax = plt.subplots(3, 3)
 
     #cp = plt.contourf(zarray_list[0], levels=scale, locator=[100,1000,10000,100000,1000000], extend='both', cmap='jet')
 
-    ax[0, 0].contourf(zarray_list[0], levels=scale, cmap='jet', extend='both')
+    alkane = ax[0, 0].contourf(zarray_list[0], levels=scale, cmap='jet', extend='both')
     ax[1, 0].contourf(zarray_list[1], levels=scale, cmap='jet', extend='both')
-    ax[0, 1].contourf(zarray_list[2], levels=scale, cmap='jet', extend='both')
-    ax[1, 1].contourf(zarray_list[3], levels=scale, cmap='jet', extend='both')
-    #fig.colorbar(alkane, label='Intensity', ticks=cbticks) # Add a colorbar to a plot
+    # ax[0, 1].contourf(zarray_list[2], levels=scale, cmap='jet', extend='both')
+    # ax[1, 1].contourf(zarray_list[3], levels=scale, cmap='jet', extend='both')
+    fig.colorbar(alkane, label='Intensity', ticks=cbticks) # Add a colorbar to a plot
 
     #  Set title, xaxis and yaxis labels
     ax[0, 0].set_title('Alkanes')
     ax[1, 0].set_title('Cycloalkanes')
-    ax[0, 1].set_title('Aromatics')
-    ax[1, 1].set_title('Indanes')
+    # ax[0, 1].set_title('Aromatics')
+    # ax[1, 1].set_title('Indanes')
     ax[1, 0].set_xlabel('1D (min)')
     ax[0, 0].set_ylabel('2D (sec)')
 
@@ -241,19 +241,19 @@ def makeplot(retention_time_1d, retention_time_2d, x_scale, y_scale, largest, so
     ax[0, 0].set_yticks(getTickPos(ylist, yticks, solvent_delay))
     ax[1, 0].set_xticks(getTickPos(xlist, xticks, solvent_delay))
     ax[1, 0].set_yticks(getTickPos(ylist, yticks, solvent_delay))
-    ax[0, 1].set_xticks(getTickPos(xlist, xticks, solvent_delay))
-    ax[0, 1].set_yticks(getTickPos(ylist, yticks, solvent_delay))
-    ax[1, 1].set_xticks(getTickPos(xlist, xticks, solvent_delay))
-    ax[1, 1].set_yticks(getTickPos(ylist, yticks, solvent_delay))
+    # ax[0, 1].set_xticks(getTickPos(xlist, xticks, solvent_delay))
+    # ax[0, 1].set_yticks(getTickPos(ylist, yticks, solvent_delay))
+    # ax[1, 1].set_xticks(getTickPos(xlist, xticks, solvent_delay))
+    # ax[1, 1].set_yticks(getTickPos(ylist, yticks, solvent_delay))
     #  Sets tick labels at previously set positions
     ax[0, 0].set_xticklabels(xticks, fontdict=None, minor=False)
     ax[0, 0].set_yticklabels(yticks, fontdict=None, minor=False)
     ax[1, 0].set_xticklabels(xticks, fontdict=None, minor=False)
     ax[1, 0].set_yticklabels(yticks, fontdict=None, minor=False)
-    ax[0, 1].set_xticklabels(xticks, fontdict=None, minor=False)
-    ax[0, 1].set_yticklabels(yticks, fontdict=None, minor=False)
-    ax[1, 1].set_xticklabels(xticks, fontdict=None, minor=False)
-    ax[1, 1].set_yticklabels(yticks, fontdict=None, minor=False)
+    # ax[0, 1].set_xticklabels(xticks, fontdict=None, minor=False)
+    # ax[0, 1].set_yticklabels(yticks, fontdict=None, minor=False)
+    # ax[1, 1].set_xticklabels(xticks, fontdict=None, minor=False)
+    # ax[1, 1].set_yticklabels(yticks, fontdict=None, minor=False)
     plt.show()
 
 
@@ -272,8 +272,8 @@ if __name__ == '__main__':
     retention_time_2d = 2.3  # retention time of 2D  note- value is hard coded in getTicks() and will need to be changed too
     y_scale = 0.5  # value you want the y axis to scale by (in seconds)
     solvent_delay = 11.1  # solvent delay in minutes (change for solvent type)
-    MZvalues = [[43, 57, 71, 85, 99], [41, 55, 69, 83, 97], [91, 105, 106, 119, 120, 134], [117, 118, 131, 132, 145, 146]]  # What m/z values you want
-    # Alkanes, cycloalkanes, aromatics, indanes
+    MZvalues = [[43, 57, 71, 85, 99], [41, 55, 69, 83, 97]]  # What m/z values you want
+    # Alkanes, cycloalkanes, aromatics, indanes [91, 105, 106, 119, 120, 134], [117, 118, 131, 132, 145, 146]
     filename = '202200505_DL_4_EthylAcetate_BL_70eVoutput.csv'
     y_per_x = round(modulation_time * acquisitions_persec)  # How many y values per x
     scaled = 0  # Value the scale is based off of
