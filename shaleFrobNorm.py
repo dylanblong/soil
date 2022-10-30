@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     writeheader()   # makes csv w/ header
     #  opens text file containing filenames and runs in sequence
-    with open('shalefile.txt', 'r') as read_obj:
+    with open('queue.txt', 'r') as read_obj:
         filename = read_obj.readline()
         while filename != '':
             filename = filename[:-1]  # takes off '\n' at end

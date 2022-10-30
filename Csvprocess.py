@@ -1,4 +1,6 @@
-
+import numpy as np
+import csv
+from csv import reader
 
 def csvreadline(file, outputfilename):
     '''
@@ -55,8 +57,7 @@ def writeline(sorted_row, outputfilename):
     
 
 if __name__ == '__main__':
-    total_time = 0.0
-    start = time.time()
+
     inputfilename = 'queue.txt'
     with open('queue.txt', 'r') as file:
         while inputfilename != '':
@@ -69,11 +70,3 @@ if __name__ == '__main__':
                 print('currently working on ' + inputfilename + ' into ' + outputfilename)
                 csvreadline(inputfilename, outputfilename)
 
-
-
-
-    # Prints time it took to process files
-    end = time.time()
-    total_time = start-end
-    print(total_time)    
-    
